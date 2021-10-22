@@ -11,6 +11,7 @@ use App\Models\Schedule;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use Nette\Schema\Context;
+use App\Http\Controllers\Require\Class\Validate;
 
 class ShiftController extends Controller
 {
@@ -127,8 +128,19 @@ class ShiftController extends Controller
 
     }
 
-    public function show(){
-        
+    public function show($turn){
+
+        // Si los argumentos contienen caracteres de tipo mayusculas. Los pasamos a minusculas, para llevar una nomenclatura estandar: 
+        $name_turn = $turn;
+
+        // Realizamos la consulta a la tabla de la DB: 
+        $model = Shift::select('id_shift as id', 'name_turn', 'abbreviation_name', 'schedule_id')->where('name_turn', $name_turn);
+
+        // Validamos que exista el registro: 
+        $validateShift = $model->first();
+
+        return response(content: ['query' => true, 'shift' => $validateShift], status: 200);
+
     }
 
     //metodo para retornar los turnos y sus horarios

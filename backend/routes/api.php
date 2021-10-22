@@ -4,6 +4,8 @@ use App\Http\Controllers\admin_module\NurseSpecialityController;
 
 use App\Http\Controllers\admin_module\RoleController;
 use App\Http\Controllers\patient_module\PatientSpecialityController;
+use App\Http\Controllers\shift_module\AssignmentTimeController;
+use App\Http\Controllers\shift_module\ScheduleMontController;
 use App\Http\Controllers\shift_module\ShiftController;
 use App\Http\Controllers\shift_module\TimeController;
 use Illuminate\Support\Facades\Route;
@@ -42,6 +44,10 @@ Route::get(uri: '/times/v1/{start_time}/{finish_time}', action : [TimeController
 Route::delete(uri: '/times/v1/{start_time}/{finish_time}', action : [TimeController::class, 'destroy']);
 Route::get(uri: '/shifts-schedules/v1', action: [ShiftController::class, 'shifts']);
 Route::apiResource(name: '/shifts/v1', controller: 'App\Http\Controllers\shift_module\ShiftController');
+Route::apiResource(name: '/assignment-times/v1', controller: 'App\Http\Controllers\shift_module\AssignmentTimeController');
+Route::get(uri: '/assignment-times/v1/{turn}/{time_id}', action: [AssignmentTimeController::class, 'show']);
+Route::delete(uri: '/assignment-times/v1/{turn}/{time_id}', action: [AssignmentTimeController::class, 'destroy']);
+Route::get(uri: '/mont-schedules/v1/{name_turn}', action: [ScheduleMontController::class, 'show']);
 //Route::apiResource(name: '/shifts-create/v1', controller: 'App\Http\Controllers\shift_module\ShiftController');
 
 Route::apiResource(name: '/schedules/v1', controller: 'App\Http\Controllers\shift_module\ScheduleController');
@@ -52,3 +58,4 @@ Route::delete(uri: '/delete-module-assignment/v1/{roleName}/{moduleName}', actio
 
 // Modulo publico: 
 Route::apiResource(name: '/login/v1', controller: 'App\Http\Controllers\public_module\LoginController');
+

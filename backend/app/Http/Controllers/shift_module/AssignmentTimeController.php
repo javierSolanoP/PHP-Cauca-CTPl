@@ -63,7 +63,7 @@ class AssignmentTimeController extends Controller
             $shiftController = new ShiftController; 
 
             // Validamos que exista: 
-            $validateShift = $shiftController->show(name_turn: $request->input('name_turn'));
+            $validateShift = $shiftController->show(turn: $request->input('name_turn'));
 
             // Extraemos el contenido de la respuesta: 
             $contentValidateShift = $validateShift->getOriginalContent();
@@ -75,8 +75,8 @@ class AssignmentTimeController extends Controller
                 $shift_id = $contentValidateShift['shift']['id']; 
 
                 // Realizamos la consulta a la tabla de la DB:
-                $model = AssignmentTime::where('name_turn')
-                                        ->where('time_id');
+                $model = AssignmentTime::where('shift_id', $shift_id)
+                                        ->where('time_id', $request->input('time_id'));
 
                 // Validamos que exista el registro en la tabla de la DB:
                 $validateAssignmentTime = $model->first();
@@ -88,7 +88,7 @@ class AssignmentTimeController extends Controller
 
                         AssignmentTime::create([
                             'time_id'  => $request->input('time_id'),
-                            'shift_id' => $request->input('name_turn')
+                            'shift_id' => $shift_id
                         ]);
 
                         // Retornamos la respuesta:
@@ -127,7 +127,7 @@ class AssignmentTimeController extends Controller
             $shiftController = new ShiftController; 
 
             // Validamos que exista: 
-            $validateShift = $shiftController->show(name_turn: $name_turn);
+            $validateShift = $shiftController->show(turn: $name_turn);
 
             // Extraemos el contenido de la respuesta: 
             $contentValidateShift = $validateShift->getOriginalContent();
@@ -191,7 +191,7 @@ class AssignmentTimeController extends Controller
             $shiftController = new ShiftController; 
 
             // Validamos que exista: 
-            $validateShift = $shiftController->show(name_turn: $name_turn);
+            $validateShift = $shiftController->show(turn: $name_turn);
 
             // Extraemos el contenido de la respuesta: 
             $contentValidateShift = $validateShift->getOriginalContent();
