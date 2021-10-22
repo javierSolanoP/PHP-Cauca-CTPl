@@ -45,7 +45,7 @@
 <body>
     <h1>Organigrama mensual</h1>
     <hr>
-    @for($i = 0; $i < 4; $i++)
+    @foreach ($week as $register)
         <br>
         <table>
             <thead>
@@ -61,7 +61,7 @@
             </thead>
             <tbody>
                 <tr>
-                    @foreach ($week_parse as $day)
+                    @foreach ($register as $day)
                         <td>
                             {{ $day['work'] }} <br>
                             {{ $day['shift'] }} <br>
@@ -71,6 +71,6 @@
                 </tr>
             </tbody>
         </table>
-    @endfor
+    @endforeach
 </body>
 </html>

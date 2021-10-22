@@ -5,128 +5,118 @@ namespace App\Http\Controllers\public_module;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\App;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Http\Controllers\shift_module\ScheduleMontController;
+use Illuminate\Support\Facades\DB;
 
 class OrganizationChartController extends Controller
 {
     
-    public function stream()
+    public function stream($name)
     {
-        // $week  = ['monday' => true, 'tuesday' => true, 'wednesday' => false, 'thursday' => false, 'friday' => false, 'saturday' => true, 'sunday' => true];
-        $week  = [
-            'monday' => ['work' => true, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']], 
-            'tuesday' => ['work' => true, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']], 
-            'wednesday' => ['work' => true, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']], 
-            'thursday' => ['work' => true, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']], 
-            'friday' => ['work' => true, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']], 
-            'saturday' => ['work' => true, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']], 
-            'sunday' => ['work' => false, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']]];
-        
-        $week_parse = [];
+        $name_turn = strtolower($name);
 
-        // return $week;
+        //realizamos la consulta en la bae de datos
+        $model = DB::table('shifts')
 
-        foreach($week as $week => $day){
+            ->where('name_turn', $name_turn)
+            ->join('schedules', 'schedules.id_schedule', '=', 'shifts.schedule_id')
+            ->join('nurses', 'nurses.id_nurse', '=', 'schedules.nurse_id')
+            ->join('assignment_times', 'assignment_times.shift_id', '=', 'shifts.id_shift')
+            ->join('times', 'times.id_time', '=', 'assignment_times.time_id')
+            ->select('shifts.abbreviation_name', 'schedules.*', 'times.*', 'nurses.identification');
 
-            foreach($day as $key => $value){
+        //validamos que exista el registro
+        $validateShifts = $model->get();
 
-                if($key == 'work'){
+        $week = [];
 
-                    if($value){
-                        $week_parse[$week][$key] = 'Ocupado';
-                    }else{
-                        $week_parse[$week][$key] = 'Libre';
-                    }
-                    
-                }else{
-                    $week_parse[$week][$key] = $value;
-                }
-            }
+        foreach($validateShifts as $validateShift){
+
+            $week[] = [
+                'monday' => ['work' => $validateShift->monday, 'shift' =>  $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]], 
+                'tuesday' => ['work' => $validateShift->tuesday, 'shift' => $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]], 
+                'wednesday' => ['work' => $validateShift->wednesday, 'shift' => $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]], 
+                'thursday' => ['work' => $validateShift->thursday, 'shift' => $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]], 
+                'friday' => ['work' => $validateShift->friday, 'shift' => $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]], 
+                'saturday' => ['work' => $validateShift->saturday, 'shift' => $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]], 
+                'sunday' => ['work' => $validateShift->sunday, 'shift' => $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]]];
 
         }
 
         $pdf = App::make('dompdf.wrapper');
-        $pdf->loadView('organization_chart', ['week_parse' => $week_parse])->setPaper('a4', 'landscape')->save('organization_charts/organigrama.pdf');
+        $pdf->loadView('organization_chart', ['week' => $week])->setPaper('a4', 'landscape')->save("organization_charts/".$validateShifts[0]->identification.".pdf");
         return $pdf->stream();
     }
 
-    public function download()
+    public function download($name_turn)
     {
         // $week  = ['monday' => true, 'tuesday' => true, 'wednesday' => false, 'thursday' => false, 'friday' => false, 'saturday' => true, 'sunday' => true];
-        $week  = [
-            'monday' => ['work' => true, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']], 
-            'tuesday' => ['work' => true, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']], 
-            'wednesday' => ['work' => true, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']], 
-            'thursday' => ['work' => true, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']], 
-            'friday' => ['work' => true, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']], 
-            'saturday' => ['work' => true, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']], 
-            'sunday' => ['work' => false, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']]];
-        
-        $week_parse = [];
+         //realizamos la consulta en la bae de datos
+         $model = DB::table('shifts')
 
-        // return $week;
+         ->where('name_turn', $name_turn)
+         ->join('schedules', 'schedules.id_schedule', '=', 'shifts.schedule_id')
+         ->join('nurses', 'nurses.id_nurse', '=', 'schedules.nurse_id')
+         ->join('assignment_times', 'assignment_times.shift_id', '=', 'shifts.id_shift')
+         ->join('times', 'times.id_time', '=', 'assignment_times.time_id')
+         ->select('shifts.abbreviation_name', 'schedules.*', 'times.*', 'nurses.identification');
 
-        foreach($week as $week => $day){
+     //validamos que exista el registro
+     $validateShifts = $model->get();
 
-            foreach($day as $key => $value){
+     $week = [];
 
-                if($key == 'work'){
+     foreach($validateShifts as $validateShift){
 
-                    if($value){
-                        $week_parse[$week][$key] = 'Ocupado';
-                    }else{
-                        $week_parse[$week][$key] = 'Libre';
-                    }
-                    
-                }else{
-                    $week_parse[$week][$key] = $value;
-                }
-            }
+         $week[] = [
+             'monday' => ['work' => $validateShift->monday, 'shift' =>  $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]], 
+             'tuesday' => ['work' => $validateShift->tuesday, 'shift' => $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]], 
+             'wednesday' => ['work' => $validateShift->wednesday, 'shift' => $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]], 
+             'thursday' => ['work' => $validateShift->thursday, 'shift' => $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]], 
+             'friday' => ['work' => $validateShift->friday, 'shift' => $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]], 
+             'saturday' => ['work' => $validateShift->saturday, 'shift' => $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]], 
+             'sunday' => ['work' => $validateShift->sunday, 'shift' => $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]]];
 
-        }
+     }
 
         $pdf = App::make('dompdf.wrapper');
-        $pdf->loadView('organization_chart', ['week_parse' => $week_parse])->setPaper('a4', 'landscape');
-        return $pdf->download('organigrama.pdf');
+        $pdf->loadView('organization_chart', ['week' => $week])->setPaper('a4', 'landscape');
+        return $pdf->download($validateShifts[0]->identification.".pdf");
     }
 
-    public function qrCode()
+    public function qrCode($name_turn)
     {
-         // $week  = ['monday' => true, 'tuesday' => true, 'wednesday' => false, 'thursday' => false, 'friday' => false, 'saturday' => true, 'sunday' => true];
-         $week  = [
-            'monday' => ['work' => true, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']], 
-            'tuesday' => ['work' => true, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']], 
-            'wednesday' => ['work' => true, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']], 
-            'thursday' => ['work' => true, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']], 
-            'friday' => ['work' => true, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']], 
-            'saturday' => ['work' => true, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']], 
-            'sunday' => ['work' => false, 'shift' => 'T1', 'time' => ['start_time' => '07:19', 'finish_time' => '19:00']]];
-        
-        $week_parse = [];
+         //realizamos la consulta en la bae de datos
+         $model = DB::table('shifts')
 
-        // return $week;
+         ->where('name_turn', $name_turn)
+         ->join('schedules', 'schedules.id_schedule', '=', 'shifts.schedule_id')
+         ->join('nurses', 'nurses.id_nurse', '=', 'schedules.nurse_id')
+         ->join('assignment_times', 'assignment_times.shift_id', '=', 'shifts.id_shift')
+         ->join('times', 'times.id_time', '=', 'assignment_times.time_id')
+         ->select('shifts.abbreviation_name', 'schedules.*', 'times.*', 'nurses.identification');
 
-        foreach($week as $week => $day){
+     //validamos que exista el registro
+     $validateShifts = $model->get();
 
-            foreach($day as $key => $value){
+     $week = [];
 
-                if($key == 'work'){
+     foreach($validateShifts as $validateShift){
 
-                    if($value){
-                        $week_parse[$week][$key] = 'Ocupado';
-                    }else{
-                        $week_parse[$week][$key] = 'Libre';
-                    }
-                    
-                }else{
-                    $week_parse[$week][$key] = $value;
-                }
-            }
+         $week[] = [
+             'monday' => ['work' => $validateShift->monday, 'shift' =>  $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]], 
+             'tuesday' => ['work' => $validateShift->tuesday, 'shift' => $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]], 
+             'wednesday' => ['work' => $validateShift->wednesday, 'shift' => $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]], 
+             'thursday' => ['work' => $validateShift->thursday, 'shift' => $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]], 
+             'friday' => ['work' => $validateShift->friday, 'shift' => $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]], 
+             'saturday' => ['work' => $validateShift->saturday, 'shift' => $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]], 
+             'sunday' => ['work' => $validateShift->sunday, 'shift' => $validateShift->abbreviation_name, 'time' => ['start_time' => $validateShift->start_time, 'finish_time' => $validateShift->finish_time]]];
 
-        }
+     }
 
         $pdf = App::make('dompdf.wrapper');
-        $pdf->loadView('organization_chart', ['week_parse' => $week_parse])->setPaper('a4', 'landscape')->save('organization_charts/organigrama.pdf');
+        $pdf->loadView('organization_chart', ['week' => $week])->setPaper('a4', 'landscape')->save('organization_charts/organigrama.pdf');
 
-        return QrCode::size(300)->generate("http://127.0.0.1:8000/organization_charts/organigrama.pdf");
+        return QrCode::size(300)->generate("http://127.0.0.1:8000/organization_charts/".$validateShifts[0]->identification.".pdf");
     }
 }
